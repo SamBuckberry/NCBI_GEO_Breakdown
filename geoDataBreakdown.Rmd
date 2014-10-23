@@ -1,0 +1,160 @@
+Download and plot data for the holdings at NCBI GEO
+========================================================
+
+Load all the required packages
+```{r}
+library("devtools")
+install_github("ropensci/plotly")
+library(plotly)
+library(XML)
+```
+
+First, download the historical data from NCBI GEO and get it into a format for plotting:
+```{r}
+# GEO history data
+history <- "http://www.ncbi.nlm.nih.gov/geo/summary/summary.cgi?type=history"
+geoDat <- readHTMLTable(doc=history)
+geoDat <- as.data.frame(geoDat)
+
+# get the number of samples for each period
+samples <- as.character(geoDat$NULL.Samples)
+
+# Remove the comma from the numbers
+samples <- gsub(samples, pattern=",", replacement="")
+samples <- as.numeric(samples)
+
+# get the series (datasets) for each period and remove the comma from the numbers
+series <- as.character(geoDat$NULL.Series)
+series <- gsub(series, pattern=",", replacement="")
+series <- as.numeric(series)
+
+# get the year and quarter and combine into number reflecting time period
+year <- as.numeric(as.character(geoDat$NULL.Year))
+quarter <- as.numeric(as.character(geoDat$NULL.Quarter))
+date <- year + (quarter/4)
+geoSamples <- data.frame(Samples = samples, Year = date, Datasets = series)
+```
+
+Plot the data using plotly. Remember to set the PLoyly username and key:
+```{r}
+# Geo data holdings over time
+py <- plotly(username=username, key=key)
+
+trace1 <- list(
+  x = date, 
+  y = samples, 
+  name = "Samples", 
+  type = "bar"
+)
+trace2 <- list(
+  x = date, 
+  y = series, 
+  name = "Datasets", 
+  yaxis = "y2", 
+  type = "scatter"
+)
+data <- list(trace1, trace2)
+layout <- list(
+  title = "NCBI GEO data holdings 2000-2014", 
+  yaxis = list(title = "Number of samples"), 
+  font = list(size = 16),
+  legend = list(
+    x = 0.85, 
+    y = 0.9
+  ),
+  yaxis2 = list(
+    title = "Number of data sets", 
+    titlefont = list(color = "rgb(148, 103, 189)"), 
+    tickfont = list(color = "rgb(148, 103, 189)"), 
+    overlaying = "y", 
+    side = "right"
+  )
+  
+)
+
+response <- py$plotly(data, kwargs=list(layout=layout, filename="geo-history", fileopt="overwrite"))
+url <- response$url
+```
+
+Get the breakdown of taxanomic groups:
+```{r}
+# GEO taxa data
+taxa <- "http://www.ncbi.nlm.nih.gov/geo/summary/summary.cgi?type=tax"
+geoTaxa <- readHTMLTable(doc=taxa)
+geoTaxa <- as.data.frame(geoTaxa)
+
+# Extract the sample numbers for each taxa and remove the commas from the numbers
+sTaxa <- as.character(geoTaxa[ ,4])
+sTaxa <- gsub(sTaxa, pattern=",", replacement="")
+sTaxa <- as.numeric(sTaxa)
+
+# Extract the number of datasets for each taxa
+dTaxa <- as.character(geoTaxa[ ,2])
+dTaxa <- gsub(dTaxa, pattern=",", replacement="")
+dTaxa <- as.numeric(dTaxa)
+
+# Extract the taxa names
+nTaxa <- geoTaxa[ ,1]
+
+# Form the data frame for plotting
+geoTaxa <- data.frame(Taxa = nTaxa, Samples = sTaxa, Datasets = dTaxa)
+
+comparison <- c("Number of datasets", "Number of samples")
+
+py <- plotly(username=username, key=key)
+
+trace <- geoTaxa$
+
+for(i in geoTaxa$Taxa){
+        i <- list(
+  x = comparison, 
+  y = geoTaxa[, ], 
+  name = "SF Zoo", 
+  type = "bar"
+}
+trace1 <- list(
+  x = comparison, 
+  y = geoTaxa[1, ], 
+  name = "SF Zoo", 
+  type = "bar"
+)
+trace2 <- list(
+  x = c("giraffes", "orangutans", "monkeys"), 
+  y = c(12, 18, 29), 
+  name = "LA Zoo", 
+  type = "bar"
+)
+data <- list(trace1, trace2)
+layout <- list(barmode = "stack")
+response <- py$plotly(data, kwargs=list(layout=layout, filename="stacked-bar", fileopt="overwrite"))
+url <- response$url
+
+```
+
+Generate some plots
+```{r}
+
+
+# Geo sample/taxa composition
+library(plotly)
+py <- plotly(username="sambucas", key="dbghruqx64")
+
+trace1 <- list(
+  x = c("", "orangutans", "monkeys"), 
+  y = c(20, 14, 23), 
+  name = "SF Zoo", 
+  type = "bar"
+)
+trace2 <- list(
+  x = c("giraffes", "orangutans", "monkeys"), 
+  y = c(12, 18, 29), 
+  name = "LA Zoo", 
+  type = "bar"
+)
+data <- list(trace1, trace2)
+layout <- list(barmode = "stack")
+response <- py$plotly(data, kwargs=list(layout=layout, filename="stacked-bar", fileopt="overwrite"))
+url <- response$url
+```
+
+
