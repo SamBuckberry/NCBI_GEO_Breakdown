@@ -6,6 +6,8 @@ Load all the required packages
 library("devtools")
 install_github("ropensci/plotly")
 library(plotly)
+py <- plotly(username=username, key=key)
+
 library(XML)
 ```
 
@@ -35,7 +37,7 @@ date <- year + (quarter/4)
 geoSamples <- data.frame(Samples = samples, Year = date, Datasets = series)
 ```
 
-Plot the data using plotly. Remember to set the PLoyly username and key:
+Plot the data using plotly. Remember to set the Plotly username and key:
 ```{r}
 # Geo data holdings over time
 py <- plotly(username=username, key=key)
@@ -96,45 +98,35 @@ dTaxa <- as.numeric(dTaxa)
 # Extract the taxa names
 nTaxa <- geoTaxa[ ,1]
 
-# Form the data frame for plotting
+# Form the data frame for plotting and sort smallest to largest and add colour
 geoTaxa <- data.frame(Taxa = nTaxa, Samples = sTaxa, Datasets = dTaxa)
+geoTaxa <- geoTaxa[order(geoTaxa$Samples), ]
 
-comparison <- c("Number of datasets", "Number of samples")
 
-py <- plotly(username=username, key=key)
+# Set the Vitamin C colour palette
+vitC <- c("#1695A3", "#BEDB39", "#FFE11A", "#1F8A70", "#FD7400", "#004358")
+geoTaxa$col <- c(rep(x="#CCCC9F", times=(nrow(geoTaxa) - length(vitC))), vitC)
 
-trace <- geoTaxa$
-
-for(i in geoTaxa$Taxa){
-        i <- list(
-  x = comparison, 
-  y = geoTaxa[, ], 
-  name = "SF Zoo", 
-  type = "bar"
+taxaSamples <- function(taxa){
+        taxa <- list(
+  x = "Species", 
+  y = c(geoTaxa[geoTaxa$Taxa == as.character(taxa), 2]),
+  name = as.character(taxa),
+  marker = list(color = geoTaxa[geoTaxa$Taxa == as.character(taxa), 4]),
+  type = "bar")
 }
-trace1 <- list(
-  x = comparison, 
-  y = geoTaxa[1, ], 
-  name = "SF Zoo", 
-  type = "bar"
-)
-trace2 <- list(
-  x = c("giraffes", "orangutans", "monkeys"), 
-  y = c(12, 18, 29), 
-  name = "LA Zoo", 
-  type = "bar"
-)
-data <- list(trace1, trace2)
-layout <- list(barmode = "stack")
-response <- py$plotly(data, kwargs=list(layout=layout, filename="stacked-bar", fileopt="overwrite"))
-url <- response$url
 
+traces <- lapply(X=geoTaxa$Taxa, FUN=taxaSamples)
+
+layout <- list(barmode = "stack", autosize=FALSE, width = 500, height = 550, title = "Species composition of NCBI GEO data holdings", yaxis = list(title = "Number of samples"), font = list(size = 16))
+
+response <- py$plotly(traces, kwargs=list(layout=layout, filename="geo-taxa", fileopt="overwrite"))
+
+url <- response$url
 ```
 
 Generate some plots
 ```{r}
-
-
 # Geo sample/taxa composition
 library(plotly)
 py <- plotly(username="sambucas", key="dbghruqx64")
