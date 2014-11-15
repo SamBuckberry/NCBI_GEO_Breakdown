@@ -6,10 +6,14 @@ Load all the required packages
 library(devtools)
 install_github("ropensci/plotly")
 library(plotly)
-py <- plotly(username=username, key=key)
-
 library(XML)
 ```
+
+Setup the plotly API. You will need to have a Plotly account and need your username and API key
+```{r}
+py <- plotly(username=username, key=key)
+```
+
 
 First, download the historical data from NCBI GEO and get it into a format for plotting:
 ```{r}
@@ -40,8 +44,6 @@ geoSamples <- data.frame(Samples = samples, Year = date, Datasets = series)
 Plot the data using plotly. Remember to set the Plotly username and key:
 ```{r}
 # Geo data holdings over time
-py <- plotly(username=username, key=key)
-
 trace1 <- list(
   x = date, 
   y = samples, 
