@@ -3,7 +3,7 @@ Download and plot data for the holdings at NCBI GEO
 
 Load all the required packages
 ```{r}
-library("devtools")
+library(devtools)
 install_github("ropensci/plotly")
 library(plotly)
 py <- plotly(username=username, key=key)
@@ -125,28 +125,37 @@ response <- py$plotly(traces, kwargs=list(layout=layout, filename="geo-taxa", fi
 url <- response$url
 ```
 
-Generate some plots
+Calculate number of samples per dataset
 ```{r}
-# Geo sample/taxa composition
-library(plotly)
-py <- plotly(username="sambucas", key="dbghruqx64")
+geoSamples <- geoSamples[1:56, ]
+geoSamples$setSize <- geoSamples$Samples/geoSamples$Datasets
+barplot(geoSamples$setSize)
+
+abline()
+
+
+# Geo data holdings over time
+py <- plotly(username=username, key=key)
 
 trace1 <- list(
-  x = c("", "orangutans", "monkeys"), 
-  y = c(20, 14, 23), 
-  name = "SF Zoo", 
+  x = geoSamples$Year, 
+  y = geoSamples$setSize, 
+  name = "Average dataset size (samples)", 
   type = "bar"
 )
-trace2 <- list(
-  x = c("giraffes", "orangutans", "monkeys"), 
-  y = c(12, 18, 29), 
-  name = "LA Zoo", 
-  type = "bar"
+
+data <- list(trace1)
+layout <- list(
+  title = "NCBI GEO dataset sizes 2000-2014", 
+  yaxis = list(title = "Number of samples per dataset"), 
+  font = list(size = 16),
+  legend = list(
+    x = 0.85, 
+    y = 0.9
+  )
 )
-data <- list(trace1, trace2)
-layout <- list(barmode = "stack")
-response <- py$plotly(data, kwargs=list(layout=layout, filename="stacked-bar", fileopt="overwrite"))
+
+response <- py$plotly(data, kwargs=list(layout=layout, filename="geo-dataset-size", fileopt="overwrite"))
 url <- response$url
 ```
-
 
