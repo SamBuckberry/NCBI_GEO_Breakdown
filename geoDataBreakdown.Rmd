@@ -14,7 +14,6 @@ Setup the plotly API. You will need to have a Plotly account and need your usern
 py <- plotly(username=username, key=key)
 ```
 
-
 First, download the historical data from NCBI GEO and get it into a format for plotting:
 ```{r}
 # GEO history data
@@ -159,5 +158,50 @@ layout <- list(
 
 response <- py$plotly(data, kwargs=list(layout=layout, filename="geo-dataset-size", fileopt="overwrite"))
 url <- response$url
+```
+
+
+GEO series type data
+```{r}
+# GEO type data
+type <- "http://www.ncbi.nlm.nih.gov/geo/summary/summary.cgi?type=series"
+geoType <- readHTMLTable(doc=type)
+geoType <- as.data.frame(geoType)
+
+# Extract the sample numbers for each taxa and remove the commas from the numbers
+sType <- as.character(geoType[ ,2])
+sType <- gsub(sType, pattern=",", replacement="")
+sType <- as.numeric(sType)
+
+# Extract the taxa names
+nType <- geoType[ ,1]
+
+# Form the data frame for plotting and sort
+geoType <- data.frame(SeriesType = nType, Samples = sType)
+geoType <- geoType[order(geoType$Samples, decreasing=TRUE), ]
+
+geoTypeTop <- geoType[1:7, ]
+geoTypeOther <- geoType[8:nrow(geoType), ]
+geoTypeTop[8, 1] <- "Other"; geoTypeTop[8, 2] <- sum(geoTypeOther$Samples)
+geoTypeTop <- geoTypeTop[8:1, ]
+
+typeSamples <- function(x){
+        taxa <- list(
+  x = "Series Type", 
+  y = c(geoType[geoType$SeriesType == as.character(x), 2]),
+  name = as.character(x),
+  marker = list(color = geoType[geoType$SeriesType == as.character(x), 4]),
+  type = "bar")
+}
+
+traces <- lapply(X=geoTypeTop$SeriesType, FUN=typeSamples)
+
+layout <- list(barmode = "stack", autosize=FALSE, width = 500, height = 550, title = "Number of samples for each GEO series type", yaxis = list(title = "Number of datasets"), font = list(size = 16))
+
+response <- py$plotly(traces, kwargs=list(layout=layout, filename="geo-series-type", fileopt="overwrite"))
+
+url <- response$url
+
+
 ```
 
